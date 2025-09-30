@@ -1,0 +1,155 @@
+# JeuClementFidelLucky
+Jeu d'enqête à choix multiple.
+import pygame
+
+# Initialisation de pygame
+pygame.init()
+
+# Paramètres de la fenêtre
+LARGEUR= 1920
+HAUTEUR = 987
+fenetre = pygame.display.set_mode((LARGEUR, HAUTEUR))
+pygame.display.set_caption("bassem")
+
+# Changer l'icône de la fenêtre
+icone = pygame.image.load("images/loupe.png")  
+pygame.display.set_icon(icone)
+
+# Police de texte
+font1 = pygame.font.Font("TYPEWRITER.ttf", 70)
+font2 = pygame.font.Font("TYPEWRITER.ttf", 36)
+
+# Définition des variables des couleurs à utiliser dans le programme
+BLEU = (116, 208, 241)
+NOIR = (0, 0, 0)
+BLANC = (255, 255, 255)
+
+# Charger une image et la redimensionner 
+image1 = pygame.image.load("images/fond.png")
+image1 = pygame.transform.scale(image1, (1920,987))
+
+# Variables de jeu
+input_active = False
+prenom_joueur = ""
+
+def afficher_texte(texte, x, y, couleur, font):
+    """
+    Cette fonction permet d'afficher du texte dans une fenêtre Pygame à partir d'une position donnée (x, y). Si une ligne de texte dépasse
+    la largeur de la fenêtre, elle est automatiquement coupée et continuée à la ligne suivante.
+
+    Paramètres :
+    -----------
+        texte(str) : Le texte à afficher.
+        
+        x(int) : La position en pixels sur l'axe des abscisses (horizontal) où le texte commence à être affiché.
+        
+        y(int) : La position en pixels sur l'axe des ordonnées (vertical) où le texte commence à être affiché.
+        
+        couleur(tuple): Une couleur définie sous forme de tuple (R, G, B) pour la couleur du texte.
+    """
+    mots = texte.split(' ')
+    ligne_actuelle = ''
+    y_offset = 0  
+
+    for mot in mots:
+        # Vérifie si on peut ajouter le mot à la ligne actuelle
+        if font.size(ligne_actuelle + mot)[0] <= LARGEUR - x:
+            ligne_actuelle += mot + ' '
+        else:
+            # Dessine la ligne actuelle et réinitialise pour la nouvelle ligne
+            fenetre.blit(font.render(ligne_actuelle.strip(), True, couleur), (x, y + y_offset))
+            ligne_actuelle = mot + ' '
+            y_offset += font.get_height()  # Augmente l'offset pour la prochaine ligne
+
+    # Dessine la dernière ligne si elle n'est pas vide
+    if ligne_actuelle:
+        fenetre.blit(font.render(ligne_actuelle.strip(), True, couleur), (x, y + y_offset))
+        
+        
+def input_text(x, y, largeur, hauteur, couleur_fond, couleur_texte, font):
+    """
+    Cette fonction gère la saisie de texte par l'utilisateur dans une zone de texte définie dans une fenêtre Pygame.
+    L'utilisateur peut entrer du texte jusqu'à appuyer sur la touche "Entrée", moment auquel la saisie est terminée
+    et le texte saisi est retourné.
+
+    Paramètres :
+    -----------
+        x (int) : La position en pixels sur l'axe des abscisses (horizontal) où la zone de texte commence à être affichée.
+
+        y (int) : La position en pixels sur l'axe des ordonnées (vertical) où la zone de texte commence à être affichée.
+
+        largeur (int) : La largeur de la zone de texte en pixels.
+
+        hauteur (int) : La hauteur de la zone de texte en pixels.
+
+        couleur_fond (tuple) : La couleur de fond de la zone de texte, définie sous forme de tuple (R, G, B).
+
+        couleur_texte (tuple) : La couleur du texte dans la zone de texte, définie sous forme de tuple (R, G, B).
+
+    Returns :
+    -------
+        texte (str) : Le texte saisi par l'utilisateur.
+    """
+    global input_active
+    input_active = True
+    texte = ""
+
+    while input_active:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    input_active = False  # Désactive l'input
+                    return texte  # Retourne le texte saisi
+                elif event.key == pygame.K_BACKSPACE:
+                    texte = texte[:-1]  # Supprime le dernier caractère
+                else:
+                    texte += event.unicode  # Ajoute le caractère à la chaîne
+
+        # Afficher la zone de texte
+        pygame.draw.rect(fenetre, couleur_fond, (x, y, largeur, hauteur))
+
+        # Afficher le texte
+        texte_surface = font.render(texte, True, couleur_texte)
+        fenetre.blit(texte_surface, (x + 10, y + 10))
+
+        pygame.display.flip()  # Met à jour l'affichage
+
+fin = False
+
+# Boucle principale du jeu, tant que le jeu n'est pas fini on continue
+while fin == False:
+
+    # Boucle de gestion des évènements dans la fenêtre 
+    for event in pygame.event.get():
+
+        # Si l'utilisateur appuie sur la croix en haut à droite, cela met fin au jeu et ferme pygame 
+        if event.type == pygame.QUIT:
+            fin = True
+            pygame.quit()
+            
+        # Remplir l'écran de bleu
+    fenetre.fill(BLEU)
+    
+    # Afficher l'image à l'écran, le coin en haut à gauche à la coordonnée 0,0
+    fenetre.blit(image1, (0, 0))
+    
+     #Afficher du texte
+    afficher_texte("bassem", 650, 80, NOIR, font1)
+    
+    if prenom_joueur == "":
+    	# On demande et on recupère le prénom saisi par l'utilisateur
+        afficher_texte("Quel est ton nom ?", 100, 200, BLANC, font2)
+        prenom_joueur = input_text(200, 300, 400, 50,BLANC, BLEU,font2)
+
+    #sinon
+    else :
+        fenetre.fill(BLEU)
+        fenetre.blit(image1, (0, 0))
+        # On affiche un message personnalisé avec le prénom 
+        afficher_texte("Bonjour "+ prenom_joueur + ", bienvenue !", 50, 50, NOIR, font1)
+   
+    # Mise à jour de l'affichage
+    pygame.display.flip()
