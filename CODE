@@ -1,6 +1,6 @@
-# JeuClementFidelLucky
-Jeu d'enqête à choix multiple.
 import pygame
+import time
+
 
 # Initialisation de pygame
 pygame.init()
@@ -23,14 +23,22 @@ font2 = pygame.font.Font("TYPEWRITER.ttf", 36)
 BLEU = (116, 208, 241)
 NOIR = (0, 0, 0)
 BLANC = (255, 255, 255)
+GRIS = (200, 200, 200)
 
 # Charger une image et la redimensionner 
 image1 = pygame.image.load("images/fond.png")
 image1 = pygame.transform.scale(image1, (1920,987))
+image_salle_meurtre = pygame.image.load("images/salle_meurtre.jpeg")
+image_salle_meurtre = pygame.transform.scale(image_salle_meurtre, (1920,987))
+image_tueur = pygame.image.load("images/tueur.png")
+image_tueur = pygame.transform.scale(image_tueur, (300, 300))
+image_accueil = pygame.image.load("images/accueil.jpg")
+image_accueil = pygame.transform.scale(image_accueil, (1920//2, 987//2))
 
 # Variables de jeu
 input_active = False
 prenom_joueur = ""
+scene = "debut"
 
 def afficher_texte(texte, x, y, couleur, font):
     """
@@ -116,6 +124,80 @@ def input_text(x, y, largeur, hauteur, couleur_fond, couleur_texte, font):
         fenetre.blit(texte_surface, (x + 10, y + 10))
 
         pygame.display.flip()  # Met à jour l'affichage
+        
+def dessiner_bouton(texte, x, y, largeur, hauteur, couleur1, couleur2, couleurtexte, action=None, font = font1):
+    """
+    Cette fonction dessine un bouton interactif dans une fenêtre Pygame. Le bouton change de couleur lorsque la souris le survole,
+    et exécute une action si l'utilisateur clique dessus.
+
+    Paramètres :
+    -----------
+        texte (str) : Le texte à afficher à l'intérieur du bouton.
+
+        x (int) : La position en pixels sur l'axe des abscisses (horizontal) où le bouton commence à être dessiné.
+
+        y (int) : La position en pixels sur l'axe des ordonnées (vertical) où le bouton commence à être dessiné.
+
+        largeur (int) : La largeur souhaitée du bouton. La largeur réelle sera ajustée en fonction de la taille du texte.
+
+        hauteur (int) : La hauteur souhaitée du bouton. La hauteur réelle sera ajustée en fonction de la taille du texte.
+
+        couleur1 (tuple) : La couleur du bouton sous forme de tuple (R, G, B) lorsque la souris n'est pas dessus.
+
+        couleur2 (tuple) : La couleur du bouton sous forme de tuple (R, G, B) lorsque la souris survole le bouton.
+
+        couleurtexte (tuple) : La couleur du texte du bouton sous forme de tuple (R, G, B).
+
+        action (fonction, optionnel) : Une fonction à exécuter lorsque le bouton est cliqué. Par défaut, aucune action n'est exécutée.
+    """
+    
+    # Calculer la taille du texte
+    largeur_texte, hauteur_texte = font.size(texte)
+    largeur_bouton = max(largeur, largeur_texte + 20)  # Ajouter un peu de marge
+    hauteur_bouton = max(hauteur, hauteur_texte + 10)  # Ajouter un peu de marge
+
+    souris = pygame.mouse.get_pos()
+    clic = pygame.mouse.get_pressed()
+
+    # Détection de survol de la souris
+    if x + largeur_bouton > souris[0] > x and y + hauteur_bouton > souris[1] > y:
+        pygame.draw.rect(fenetre, couleur2, (x, y, largeur_bouton, hauteur_bouton))
+        if clic[0] == 1 and action is not None:
+            time.sleep(0.2)
+            action()
+    else:
+        pygame.draw.rect(fenetre, couleur1, (x, y, largeur_bouton, hauteur_bouton))
+
+    # Dessiner le texte centré dans le bouton
+    texte_surface = font.render(texte, True, couleurtexte)
+    texte_rect = texte_surface.get_rect(center=(x + largeur_bouton // 2, y + hauteur_bouton // 2))
+    fenetre.blit(texte_surface, texte_rect)
+    
+def choix_gauche():
+    """
+    Cette fonction permet de changer de scene lorsqu'on a choisi le bouton de gauche. 
+
+    """
+    global scene
+
+    if scene == "debut":
+        scene = "salle_meurtre"
+    elif scene == "salle_meurtre":
+        scene = "debut"
+    elif scene == "tueur":
+        scene = "debut"
+        
+def choix_droite():
+    """
+    Cette fonction permet de changer de scene lorsqu'on a choisi le bouton de droite. 
+
+    """
+    global scene
+
+    if scene == "debut":
+        scene = "tueur"
+    elif scene == "tueur":
+        scene = "perdu"
 
 fin = False
 
@@ -139,17 +221,45 @@ while fin == False:
      #Afficher du texte
     afficher_texte("bassem", 650, 80, NOIR, font1)
     
-    if prenom_joueur == "":
-    	# On demande et on recupère le prénom saisi par l'utilisateur
-        afficher_texte("Quel est ton nom ?", 100, 200, BLANC, font2)
-        prenom_joueur = input_text(200, 300, 400, 50,BLANC, BLEU,font2)
+    if scene == "debut":
+        if prenom_joueur == "":
+            # On demande et on recupère le prénom saisi par l'utilisateur
+            afficher_texte("Quel est ton nom ?", 100, 200, BLANC, font2)
+            prenom_joueur = input_text(200, 300, 400, 50,BLANC, BLEU,font2)
+            dessiner_bouton("gauche", 50, 500, 200, 50, GRIS, BLANC, NOIR, choix_gauche)
+            dessiner_bouton("droite", 550, 500, 200, 50, GRIS, BLANC, NOIR, choix_droite)
+            
+        #sinon
+        else :
+            fenetre.fill(BLEU)
+            fenetre.blit(image1, (0, 0))
+            # On affiche un message personnalisé avec le prénom 
+            afficher_texte("Bonjour "+ prenom_joueur + ", bienvenue !", 50, 50, NOIR, font1)
+            dessiner_bouton("gauche", 50, 500, 200, 50, GRIS, BLANC, NOIR, choix_gauche)
+            dessiner_bouton("droite", 550, 500, 200, 50, GRIS, BLANC, NOIR, choix_droite)
+        
+    elif scene == "salle_meurtre":
+            fenetre.blit(image_salle_meurtre, (0, 0))
+            afficher_texte("Vous avez trouvé le lieu du crime !", 50, 50, BLANC, font1)
+            dessiner_bouton("Retour", 50, 500, 200, 50, GRIS, BLANC, NOIR, choix_gauche)
 
-    #sinon
-    else :
+    elif scene == "tueur":
         fenetre.fill(BLEU)
         fenetre.blit(image1, (0, 0))
-        # On affiche un message personnalisé avec le prénom 
-        afficher_texte("Bonjour "+ prenom_joueur + ", bienvenue !", 50, 50, NOIR, font1)
+        fenetre.blit(image_tueur, (300, 300))
+        afficher_texte("bassem apparait !", 50, 50, NOIR, font1)
+        dessiner_bouton("Fuir", 50, 500, 200, 50, GRIS, BLANC, NOIR, choix_gauche)
+        dessiner_bouton("Combattre", 500, 500, 200, 50, GRIS, BLANC, NOIR, choix_droite)
+
+    elif scene == "accueil":
+        fenetre.fill(BLEU)
+        fenetre.blit(image1, (0, 0))
+        fenetre.blit(image_tueur, (300, 300))
+        fenetre.blit(image_accueil, (200, 100))
+        afficher_texte("bienvenu(e) ..", 50, 50, NOIR, font1)
+
+        
+        
    
     # Mise à jour de l'affichage
     pygame.display.flip()
